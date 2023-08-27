@@ -671,7 +671,7 @@ adjust.data.by.covariates = function(formula=NULL, data=.GlobalEnv,
 #'data(throat.otu.tab5)
 #'data(throat.meta)
 #'res.ldm <- ldm(formula=throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-#'               data=throat.meta, seed=67817, fdr.nominal=0.1) 
+#'               data=throat.meta, seed=67817, fdr.nominal=0.1, n.perm.max=1000, n.cores=1) 
 
 ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist.method="bray", dist=NULL, 
                      cluster.id=NULL, strata=NULL, how=NULL,
@@ -725,7 +725,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
     #
     #   find n.obs and full set of rownames
     #   
-    if (class(data)=='data.frame') {
+    if (is.data.frame(data)) {
         row.names=rownames(data)
         n.obs=length(row.names)
     } else {   
@@ -800,7 +800,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
     #   loc.dollar=regexpr('\\$', otu.name)[1]
     loc.dollar=utils::tail( gregexpr('\\$', otu.name)[[1]] , n=1 )
     if (loc.dollar<0)  {
-        if (class(data)=='data.frame') {
+        if (is.data.frame(data)) {
             otu.table=getElement(data, otu.name)
             if (is.null(otu.table)) otu.table= get(otu.name) 
             otu.table=as.matrix(otu.table)
@@ -885,7 +885,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
     # setup permutation
     #------------------------
     
-    if (class(how)=='how') {
+    if (as.character(class(how))=='how') {
         CTRL=how                   # user-provided how list
     } else {
         if (is.null(cluster.id)) {
@@ -4045,7 +4045,7 @@ ldm.stat.allrarefy = function(x, low, up, resid, ss.tot, P.resid, ss.tot.1, phi_
 #'data(throat.otu.tab5)
 #'data(throat.meta)
 #'res.perm <- permanovaFL(throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-#'                        data=throat.meta, dist.method="bray", seed=82955)
+#'                        data=throat.meta, dist.method="bray", seed=82955, n.perm.max=1000, n.cores=1)
 
 permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist.method=c("bray"), dist.list=NULL, 
                            cluster.id=NULL, strata=NULL, how=NULL,
@@ -4095,7 +4095,7 @@ permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NUL
     #
     #   find n.obs and full set of rownames
     #   
-    if (class(data)=='data.frame') {
+    if (is.data.frame(data)) {
         row.names=rownames(data)
         n.obs=length(row.names)
     } else {   
@@ -4170,7 +4170,7 @@ permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NUL
     #   loc.dollar=regexpr('\\$', otu.name)[1]
     loc.dollar=utils::tail( gregexpr('\\$', otu.name)[[1]] , n=1 )
     if (loc.dollar<0)  {
-        if (class(data)=='data.frame') {
+        if (is.data.frame(data)) {
             otu.table=getElement(data, otu.name)
             if (is.null(otu.table)) otu.table= get(otu.name) 
             otu.table=as.matrix(otu.table)
@@ -4246,7 +4246,7 @@ permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NUL
     # setup permutation
     #------------------------
     
-    if (class(how)=='how') {
+    if (as.character(class(how))=='how') {
         CTRL=how                   # user-provided how list
     }
     else {
@@ -5186,7 +5186,7 @@ jaccard.mean.o1 = function( otu.table, rarefy.depth=min(rowSums(otu.table)) ) {
 #' @examples
 #' data(throat.otu.tab5)
 #' data(throat.tree)
-#' res.unifrac <- unifrac.mean( throat.otu.tab5, throat.tree)
+#' res.unifrac <- unifrac.mean( throat.otu.tab5[1:20,], throat.tree)
 
 unifrac.mean = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), first.order.approx.only=FALSE) {
     if (!first.order.approx.only) {
@@ -5397,8 +5397,7 @@ unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.tabl
               unifrac.mean.sq.o1=unifrac.mean.sq.1, 
               unifrac.mean.sq.o2=unifrac.mean.sq.2)
     return(res)
-    
-} #unifrac.ave.sq.fast
+} #unifrac.mean.o1o2
 
 # (old) unifrac.ave.1
 unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=TRUE, keep.root=TRUE) {

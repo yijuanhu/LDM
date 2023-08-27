@@ -156,7 +156,7 @@ where the exposure(s) and outcomes(s) are specified as the first and second (set
 data(throat.otu.tab5)
 data(throat.meta)
 res.perm <- permanovaFL(throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-                       data=throat.meta, dist.method="bray", seed=82955)
+                       data=throat.meta, dist.method="bray", seed=82955, n.perm.max=1000, n.cores=1)
 }
 \references{
 Hu YJ, Satten GA (2020). Testing hypotheses about the microbiome using the linear decomposition model (LDM) 

@@ -35,7 +35,7 @@ This function computes the expected value of the unweighted UniFrac distance mat
 \examples{
 data(throat.otu.tab5)
 data(throat.tree)
-res.unifrac <- unifrac.mean( throat.otu.tab5, throat.tree)
+res.unifrac <- unifrac.mean( throat.otu.tab5[1:20,], throat.tree)
 }
 \author{
 Yi-Juan Hu <yijuan.hu@emory.edu>, Glen A. Satten <gsatten@emory.edu>

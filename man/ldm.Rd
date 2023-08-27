@@ -343,7 +343,7 @@ with a larger number of permutations.
 data(throat.otu.tab5)
 data(throat.meta)
 res.ldm <- ldm(formula=throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-              data=throat.meta, seed=67817, fdr.nominal=0.1) 
+              data=throat.meta, seed=67817, fdr.nominal=0.1, n.perm.max=1000, n.cores=1) 
 }
 \references{
 Hu YJ, Satten GA (2020). Testing hypotheses about the microbiome using the linear decomposition model (LDM) 
