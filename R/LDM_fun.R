@@ -5208,10 +5208,6 @@ unifrac.mean = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), 
 #(old) unifrac.ave.sq.fast
 unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=TRUE, keep.root=TRUE) {
     
-    # requireNamespace('ips')
-    # requireNamespace('castor')
-    # requireNamespace('phangorn')
-    
     otu.table=as.matrix(otu.table)
     n.obs=dim(otu.table)[1]
     n.taxa=dim(otu.table)[2]                # note for later:  remove cols with zero colSums?
@@ -5409,9 +5405,6 @@ unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)
     #
     #	calculates only the zeroth order (first) term for the unifrac distance
     #
-    # requireNamespace('ips')
-    # requireNamespace('castor')
-    # requireNamespace('phangorn')
     
     otu.table=as.matrix(otu.table)
     n.obs=dim(otu.table)[1]
@@ -5640,10 +5633,6 @@ jaccard.mean.fast.small = function( otu.table, rarefy.depth=min(rowSums(otu.tabl
 } #jaccard.mean.fast.small
 
 unifrac.ave.sq.fast.small = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=FALSE, keep.root=TRUE, n.batch=1) {
-
-    # requireNamespace('ips')
-    # requireNamespace('castor')
-    # requireNamespace('phangorn')
     
     otu.table=as.matrix(otu.table)
     n.obs=dim(otu.table)[1]
