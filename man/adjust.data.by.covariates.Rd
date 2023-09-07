@@ -91,8 +91,6 @@ after removing the effects of covariates (e.g., confounders).
 Observations with any missing data are removed.
 }
 \examples{
-data(throat.meta)
-data(throat.otu.tab5)
 adj.data <- adjust.data.by.covariates(formula= ~ Sex + AntibioticUse, data=throat.meta,
                                       otu.table=throat.otu.tab5, dist.method="bray")
 }

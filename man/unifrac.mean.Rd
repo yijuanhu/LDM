@@ -8,7 +8,8 @@ unifrac.mean(
   otu.table,
   tree,
   rarefy.depth = min(rowSums(otu.table)),
-  first.order.approx.only = FALSE
+  first.order.approx.only = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ unifrac.mean(
 \item{first.order.approx.only}{a logical value indicating whether to calculate the expected value 
 using the first order approixmation by the delta method. The default is FALSE, 
 using the second order approixmation.}
+
+\item{verbose}{a logical value indicating whether to generate verbose output. Default is TRUE.}
 }
 \value{
 a list consisting of 

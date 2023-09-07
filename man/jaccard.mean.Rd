@@ -30,7 +30,6 @@ a list consisting of
 This function computes the expected value of the Jaccard distance matrix over rarefaction replicates.
 }
 \examples{
-data(throat.otu.tab5)
 res.jaccard <- jaccard.mean( throat.otu.tab5 )
 }
 \author{

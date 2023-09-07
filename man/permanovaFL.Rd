@@ -27,7 +27,8 @@ permanovaFL(
   binary = c(FALSE),
   n.rarefy = 0,
   test.mediation = FALSE,
-  n.cores = 4
+  n.cores = 4,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -119,6 +120,8 @@ If TRUE, the formula takes the specific form \code{otu.table ~ exposure + outcom
 
 \item{n.cores}{The number of cores to use in parallel computing, i.e., at most how many child processes will be run simultaneously. 
 The default is 4.}
+
+\item{verbose}{a logical value indicating whether to generate verbose output during the permutation process. Default is TRUE.}
 }
 \value{
 a list consisting of 
@@ -153,10 +156,9 @@ It also allows testing of the mediation effect of the microbiome in the pathway 
 where the exposure(s) and outcomes(s) are specified as the first and second (sets of) covariates.
 }
 \examples{
-data(throat.otu.tab5)
-data(throat.meta)
 res.perm <- permanovaFL(throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-                       data=throat.meta, dist.method="bray", seed=82955, n.perm.max=1000, n.cores=1)
+                       data=throat.meta, dist.method="bray", seed=82955, n.perm.max=1000, n.cores=1, 
+                       verbose=FALSE)
 }
 \references{
 Hu YJ, Satten GA (2020). Testing hypotheses about the microbiome using the linear decomposition model (LDM) 

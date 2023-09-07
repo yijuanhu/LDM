@@ -43,7 +43,6 @@ This function computes a distance matrix for each rarefied OTU table, square the
 and then average the squared distance matrices.
 }
 \examples{
-data(throat.otu.tab5)
 dist.avg.D2 <- avgdist.squared(throat.otu.tab5, dist.method="jaccard", n.rarefy=100)
 }
 \author{

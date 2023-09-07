@@ -32,7 +32,8 @@ ldm(
   test.omni3 = FALSE,
   comp.anal = FALSE,
   comp.anal.adjust = "median",
-  n.cores = 4
+  n.cores = 4,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -142,6 +143,8 @@ If TRUE, the formula takes the specific form \code{otu.table ~ exposure + outcom
 
 \item{n.cores}{The number of cores to use in parallel computing, i.e., at most how many child processes will be run simultaneously. 
 The default is 4.}
+
+\item{verbose}{a logical value indicating whether to generate verbose output during the permutation process. Default is TRUE.}
 }
 \value{
 a list consisting of 
@@ -340,10 +343,9 @@ caution is advised when interpreting OTU-level tests that have not stopped as ad
 with a larger number of permutations.
 }
 \examples{
-data(throat.otu.tab5)
-data(throat.meta)
 res.ldm <- ldm(formula=throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-              data=throat.meta, seed=67817, fdr.nominal=0.1, n.perm.max=1000, n.cores=1) 
+              data=throat.meta, seed=67817, fdr.nominal=0.1, n.perm.max=1000, n.cores=1, 
+              verbose=FALSE) 
 }
 \references{
 Hu YJ, Satten GA (2020). Testing hypotheses about the microbiome using the linear decomposition model (LDM) 
