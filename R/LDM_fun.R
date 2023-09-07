@@ -42,7 +42,6 @@ Rarefy = function (otu.tab, depth = min(rowSums(otu.tab)))
 #' @author Yi-Juan Hu <yijuan.hu@emory.edu>, Glen A. Satten <gsatten@emory.edu>
 #' @export
 #' @examples
-#' data(throat.otu.tab5)
 #' dist.avg.D2 <- avgdist.squared(throat.otu.tab5, dist.method="jaccard", n.rarefy=100)
 
 avgdist.squared = function(otu.table, dist.method="jaccard", tree=NULL, scale.otu.table=FALSE, n.rarefy=100, binary=TRUE, seed=123) {
@@ -96,7 +95,7 @@ gower = function (d, square=TRUE, center=TRUE)
 }# gower
 
 
-fdr.Sandev = function(p.otu) {
+fdr.Sandve = function(p.otu) {
     
     m = length(p.otu)
     
@@ -117,7 +116,7 @@ fdr.Sandev = function(p.otu) {
     results = qval.orig
     return(results)
     
-} # fdr.Sandev
+} # fdr.Sandve
 
 
 #' @importFrom GUniFrac GUniFrac
@@ -218,8 +217,6 @@ calculate.dist <- function(otu.table, tree=NULL, dist.method="bray",
 #' @author Yi-Juan Hu <yijuan.hu@emory.edu>, Glen A. Satten <gsatten@emory.edu>
 #' @export
 #' @examples
-#' data(throat.meta)
-#' data(throat.otu.tab5)
 #' adj.data <- adjust.data.by.covariates(formula= ~ Sex + AntibioticUse, data=throat.meta,
 #'                                       otu.table=throat.otu.tab5, dist.method="bray")
 
@@ -234,7 +231,10 @@ adjust.data.by.covariates = function(formula=NULL, data=.GlobalEnv,
     # covariates (e.g., confounders)
     #------------------------
     
+    old <- options() 
+    on.exit(options(old)) 
     options(na.action=na.pass)
+    
     m1 = model.matrix(object=formula, data=data)
     
     if (!is.null(dist)) {
@@ -546,6 +546,7 @@ adjust.data.by.covariates = function(formula=NULL, data=.GlobalEnv,
 #' @param test.omni3 a logical value indicating whether to perform the new omnibus test (LDM-omni3). The default is FALSE. 
 #' @param comp.anal a logical value indicating whether the centered-log-ratio taxa count data are used (LDM-clr). The default is FALSE. 
 #' @param comp.anal.adjust a character string that takes value "median" or "mode" to choose the estimator for the beta mean (Hu and Satten, 2023). The default is "median".
+#' @param verbose a logical value indicating whether to generate verbose output during the permutation process. Default is TRUE.
 #' @return a list consisting of 
 #'   \item{x}{the (orthonormal) design matrix X as defined in Hu and Satten (2020)} 
 #'   \item{dist}{the (squared/centered) distance matrix} 
@@ -668,10 +669,9 @@ adjust.data.by.covariates = function(formula=NULL, data=.GlobalEnv,
 #' @references Yue Y and Hu YJ (2021) A new approach to testing mediation of the microbiome using the LDM. bioRxiv, https://doi.org/10.1101/2021.11.12.468449.
 #' @references Hu Y, Li Y, Satten GA, and Hu YJ (2022) Testing microbiome associations with censored survival outcomes at both the community and individual taxon levels. bioRxiv, doi.org/10.1101/2022.03.11.483858.
 #' @examples
-#'data(throat.otu.tab5)
-#'data(throat.meta)
 #'res.ldm <- ldm(formula=throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-#'               data=throat.meta, seed=67817, fdr.nominal=0.1, n.perm.max=1000, n.cores=1) 
+#'               data=throat.meta, seed=67817, fdr.nominal=0.1, n.perm.max=1000, n.cores=1, 
+#'               verbose=FALSE) 
 
 ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist.method="bray", dist=NULL, 
                      cluster.id=NULL, strata=NULL, how=NULL,
@@ -685,12 +685,17 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                      test.mediation=FALSE,
                      test.omni3=FALSE,
                      comp.anal=FALSE, comp.anal.adjust="median",
-                     n.cores=4) {  
+                     n.cores=4, 
+                     verbose=TRUE) {  
     
     #------------------------
     # form.call
     #------------------------
+    
+    old <- options() 
+    on.exit(options(old)) 
     options(na.action=na.omit) # fixed a bug here
+    
     object=formula
     #
     #   extract cluster.id from dataframe
@@ -1609,7 +1614,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                 }
                 w.otu.smallp = which(column.sums > 0)
                 
-                cat("number of OTUs do not meet early stopping criterion:", length(w.otu.smallp), "\n")
+                if (verbose) message(paste("number of OTUs do not meet early stopping criterion:", length(w.otu.smallp)))
                 
                 if (length(w.otu.smallp) != n.otu.smallp) {
                     
@@ -1889,7 +1894,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
             inv.n.perm.completed = 1/n.perm.completed
             inv.n.perm.completed.1 = 1/(n.perm.completed+1)
             
-            cat("permutations:", n.perm.completed, "\n")
+            if (verbose) message(paste("permutations:", n.perm.completed))
             
             if (n.perm.completed < n.global.perm.min) next
             if (n.perm.completed >= n.global.perm.min && n.perm.completed %% n.perm.step != 0) next
@@ -1947,7 +1952,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                     p.otu.freq[,otu.smallp][AtoB.freq] <- 0.5*n.otu.freq[AtoB.freq]*inv.n.perm.completed
                     p.otu.freq[,otu.smallp][Aset.freq] <- (0.5*n.otu.freq[Aset.freq]+1)*inv.n.perm.completed.1
                     
-                    q.otu.freq <- t(apply(p.otu.freq, 1, fdr.Sandev))
+                    q.otu.freq <- t(apply(p.otu.freq, 1, fdr.Sandve))
                     if (n.otu == 1) q.otu.freq = matrix(q.otu.freq, ncol=1)
                     
                     Aset.freq.meet.criteria <- rowAlls( ((q.otu.freq[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.freq) | (!Aset.freq) ) 
@@ -1962,7 +1967,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.freq.OR[,otu.smallp][AtoB.freq.OR] <- 0.5*n.otu.freq.OR[AtoB.freq.OR]*inv.n.perm.completed
                         p.otu.freq.OR[,otu.smallp][Aset.freq.OR] <- (0.5*n.otu.freq.OR[Aset.freq.OR]+1)*inv.n.perm.completed.1
                         
-                        q.otu.freq.OR <- t(apply(p.otu.freq.OR, 1, fdr.Sandev))
+                        q.otu.freq.OR <- t(apply(p.otu.freq.OR, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.freq.OR = matrix(q.otu.freq.OR, ncol=1)
                         
                         Aset.freq.meet.criteria.OR <- rowAlls( ((q.otu.freq.OR[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.freq.OR) | (!Aset.freq.OR) )
@@ -1995,7 +2000,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.freq.com[,otu.smallp][AtoB.freq.com] <- n.otu.freq.com[AtoB.freq.com]*inv.n.perm.completed
                         p.otu.freq.com[,otu.smallp][Aset.freq.com] <- (n.otu.freq.com[Aset.freq.com]+1)*inv.n.perm.completed.1
                         
-                        q.otu.freq.com <- t(apply(p.otu.freq.com, 1, fdr.Sandev))
+                        q.otu.freq.com <- t(apply(p.otu.freq.com, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.freq.com = matrix(q.otu.freq.com, ncol=1)
                         
                         Aset.freq.meet.criteria.com <- rowAlls( ((q.otu.freq.com[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.freq.com) | (!Aset.freq.com) ) 
@@ -2012,7 +2017,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.tran[,otu.smallp][AtoB.tran] <- 0.5*n.otu.tran[AtoB.tran]*inv.n.perm.completed
                         p.otu.tran[,otu.smallp][Aset.tran] <- (0.5*n.otu.tran[Aset.tran]+1)*inv.n.perm.completed.1
                         
-                        q.otu.tran <- t(apply(p.otu.tran, 1, fdr.Sandev))
+                        q.otu.tran <- t(apply(p.otu.tran, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.tran = matrix(q.otu.tran, ncol=1)
                         
                         Aset.tran.meet.criteria <- rowAlls( ((q.otu.tran[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.tran) | (!Aset.tran) ) 
@@ -2027,7 +2032,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                             p.otu.tran.OR[,otu.smallp][AtoB.tran.OR] <- 0.5*n.otu.tran.OR[AtoB.tran.OR]*inv.n.perm.completed
                             p.otu.tran.OR[,otu.smallp][Aset.tran.OR] <- (0.5*n.otu.tran.OR[Aset.tran.OR]+1)*inv.n.perm.completed.1
                             
-                            q.otu.tran.OR <- t(apply(p.otu.tran.OR, 1, fdr.Sandev))
+                            q.otu.tran.OR <- t(apply(p.otu.tran.OR, 1, fdr.Sandve))
                             if (n.otu == 1) q.otu.tran.OR = matrix(q.otu.tran.OR, ncol=1)
                             
                             Aset.tran.meet.criteria.OR <- rowAlls( ((q.otu.tran.OR[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.tran.OR) | (!Aset.tran.OR) ) 
@@ -2060,7 +2065,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                             p.otu.tran.com[,otu.smallp][AtoB.tran.com] <- n.otu.tran.com[AtoB.tran.com]*inv.n.perm.completed
                             p.otu.tran.com[,otu.smallp][Aset.tran.com] <- (n.otu.tran.com[Aset.tran.com]+1)*inv.n.perm.completed.1
                             
-                            q.otu.tran.com <- t(apply(p.otu.tran.com, 1, fdr.Sandev))
+                            q.otu.tran.com <- t(apply(p.otu.tran.com, 1, fdr.Sandve))
                             if (n.otu == 1) q.otu.tran.com = matrix(q.otu.tran.com, ncol=1)
                             
                             Aset.tran.meet.criteria.com <- rowAlls( ((q.otu.tran.com[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.tran.com) | (!Aset.tran.com) ) 
@@ -2079,7 +2084,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                     p.otu.pa[,otu.smallp][AtoB.pa] <- 0.5*n.otu.pa[AtoB.pa]*inv.n.perm.completed
                     p.otu.pa[,otu.smallp][Aset.pa] <- (0.5*n.otu.pa[Aset.pa]+1)*inv.n.perm.completed.1
                     
-                    q.otu.pa <- t(apply(p.otu.pa, 1, fdr.Sandev))
+                    q.otu.pa <- t(apply(p.otu.pa, 1, fdr.Sandve))
                     if (n.otu == 1) q.otu.pa = matrix(q.otu.pa, ncol=1)
                     
                     Aset.pa.meet.criteria <- rowAlls( ((q.otu.pa[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.pa) | (!Aset.pa) ) 
@@ -2094,7 +2099,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.pa.OR[,otu.smallp][AtoB.pa.OR] <- 0.5*n.otu.pa.OR[AtoB.pa.OR]*inv.n.perm.completed
                         p.otu.pa.OR[,otu.smallp][Aset.pa.OR] <- (0.5*n.otu.pa.OR[Aset.pa.OR]+1)*inv.n.perm.completed.1
                         
-                        q.otu.pa.OR <- t(apply(p.otu.pa.OR, 1, fdr.Sandev))
+                        q.otu.pa.OR <- t(apply(p.otu.pa.OR, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.pa.OR = matrix(q.otu.pa.OR, ncol=1)
                         
                         Aset.pa.meet.criteria.OR <- rowAlls( ((q.otu.pa.OR[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.pa.OR) | (!Aset.pa.OR) ) 
@@ -2127,7 +2132,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.pa.com[,otu.smallp][AtoB.pa.com] <- n.otu.pa.com[AtoB.pa.com]*inv.n.perm.completed
                         p.otu.pa.com[,otu.smallp][Aset.pa.com] <- (n.otu.pa.com[Aset.pa.com]+1)*inv.n.perm.completed.1
                         
-                        q.otu.pa.com <- t(apply(p.otu.pa.com, 1, fdr.Sandev))
+                        q.otu.pa.com <- t(apply(p.otu.pa.com, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.pa.com = matrix(q.otu.pa.com, ncol=1)
                         
                         Aset.pa.meet.criteria.com <- rowAlls( ((q.otu.pa.com[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.pa.com) | (!Aset.pa.com) ) 
@@ -2173,7 +2178,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                     p.otu.omni[,otu.smallp][AtoB.omni] <- n.otu.omni[AtoB.omni]*inv.n.perm.completed
                     p.otu.omni[,otu.smallp][Aset.omni] <- (n.otu.omni[Aset.omni]+1)*inv.n.perm.completed.1
                     
-                    q.otu.omni <- t(apply(p.otu.omni, 1, fdr.Sandev))
+                    q.otu.omni <- t(apply(p.otu.omni, 1, fdr.Sandve))
                     if (n.otu == 1) q.otu.omni = matrix(q.otu.omni, ncol=1)
                     
                     Aset.omni.meet.criteria <- rowAlls( ((q.otu.omni[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.omni) | (!Aset.omni) ) 
@@ -2207,7 +2212,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.omni.OR[,otu.smallp][AtoB.omni.OR] <- n.otu.omni.OR[AtoB.omni.OR]*inv.n.perm.completed
                         p.otu.omni.OR[,otu.smallp][Aset.omni.OR] <- (n.otu.omni.OR[Aset.omni.OR]+1)*inv.n.perm.completed.1
                         
-                        q.otu.omni.OR <- t(apply(p.otu.omni.OR, 1, fdr.Sandev))
+                        q.otu.omni.OR <- t(apply(p.otu.omni.OR, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.omni.OR = matrix(q.otu.omni.OR, ncol=1)
                         
                         Aset.omni.meet.criteria.OR <- rowAlls( ((q.otu.omni.OR[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.omni.OR) | (!Aset.omni.OR) ) 
@@ -2231,7 +2236,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.omni.com[,otu.smallp][AtoB.omni.com] <- n.otu.omni.com[AtoB.omni.com]*inv.n.perm.completed
                         p.otu.omni.com[,otu.smallp][Aset.omni.com] <- (n.otu.omni.com[Aset.omni.com]+1)*inv.n.perm.completed.1
                         
-                        q.otu.omni.com <- t(apply(p.otu.omni.com, 1, fdr.Sandev))
+                        q.otu.omni.com <- t(apply(p.otu.omni.com, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.omni.com = matrix(q.otu.omni.com, ncol=1)
                         
                         Aset.omni.meet.criteria.com <- rowAlls( ((q.otu.omni.com[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.omni.com) | (!Aset.omni.com) ) 
@@ -2263,7 +2268,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         p.otu.omni3[,otu.smallp][AtoB.omni3] <- n.otu.omni3[AtoB.omni3]*inv.n.perm.completed
                         p.otu.omni3[,otu.smallp][Aset.omni3] <- (n.otu.omni3[Aset.omni3]+1)*inv.n.perm.completed.1
                         
-                        q.otu.omni3 <- t(apply(p.otu.omni3, 1, fdr.Sandev))
+                        q.otu.omni3 <- t(apply(p.otu.omni3, 1, fdr.Sandve))
                         if (n.otu == 1) q.otu.omni3 = matrix(q.otu.omni3, ncol=1)
                         
                         Aset.omni3.meet.criteria <- rowAlls( ((q.otu.omni3[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.omni3) | (!Aset.omni3) ) 
@@ -2290,7 +2295,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                             p.otu.omni3.OR[,otu.smallp][AtoB.omni3.OR] <- n.otu.omni3.OR[AtoB.omni3.OR]*inv.n.perm.completed
                             p.otu.omni3.OR[,otu.smallp][Aset.omni3.OR] <- (n.otu.omni3.OR[Aset.omni3.OR]+1)*inv.n.perm.completed.1
                             
-                            q.otu.omni3.OR <- t(apply(p.otu.omni3.OR, 1, fdr.Sandev))
+                            q.otu.omni3.OR <- t(apply(p.otu.omni3.OR, 1, fdr.Sandve))
                             if (n.otu == 1) q.otu.omni3.OR = matrix(q.otu.omni3.OR, ncol=1)
                             
                             Aset.omni3.meet.criteria.OR <- rowAlls( ((q.otu.omni3.OR[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.omni3.OR) | (!Aset.omni3.OR) ) 
@@ -2314,7 +2319,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                             p.otu.omni3.com[,otu.smallp][AtoB.omni3.com] <- n.otu.omni3.com[AtoB.omni3.com]*inv.n.perm.completed
                             p.otu.omni3.com[,otu.smallp][Aset.omni3.com] <- (n.otu.omni3.com[Aset.omni3.com]+1)*inv.n.perm.completed.1
                             
-                            q.otu.omni3.com <- t(apply(p.otu.omni3.com, 1, fdr.Sandev))
+                            q.otu.omni3.com <- t(apply(p.otu.omni3.com, 1, fdr.Sandve))
                             if (n.otu == 1) q.otu.omni3.com = matrix(q.otu.omni3.com, ncol=1)
                             
                             Aset.omni3.meet.criteria.com <- rowAlls( ((q.otu.omni3.com[,otu.smallp,drop=FALSE] < fdr.nominal) & Aset.omni3.com) | (!Aset.omni3.com) ) 
@@ -2342,7 +2347,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
             
             if (meet.sandve.stop) {
                 otu.tests.stopped = TRUE 
-                cat("otu test stopped at permutation", n.perm.completed, "\n")
+                if (verbose) message(paste("otu test stopped at permutation", n.perm.completed))
                 n.otu.perm.completed = n.perm.completed
             }
             
@@ -2957,7 +2962,7 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                     
                     if (meet.all.rej.stop & med.meet.all.rej.stop) {
                         global.tests.stopped = TRUE
-                        cat("global test stopped at permutation", n.perm.completed, "\n")
+                        if (verbose) message(paste("global test stopped at permutation", n.perm.completed))
                         n.global.perm.completed = n.perm.completed
                     }
                     
@@ -3724,7 +3729,7 @@ ldm.stat = function(x, low, up, resid, ss.tot, adjust.for.confounders, comp.anal
 
 
 
-log.int.seq = function(low, up, log.int) {
+sumup.seq = function(low, up, log.int) {
     return(ifelse(low==up, 0, sum(log.int[(low+1):up])))
 }
 
@@ -3829,8 +3834,8 @@ calculate.x.and.resid.allrarefy = function( y, index, m, adjust.for.confounders)
     w = which(lib.size-rarefy.depth-vec.y >= 0)
     phi[-w] = 0
     
-    a = mapply(log.int.seq, (lib.size-rarefy.depth-vec.y)[w], (lib.size-rarefy.depth-vec.tmp)[w], MoreArgs=list(log.int=log.int))
-    b = mapply(log.int.seq, (lib.size-vec.y)[w], (lib.size-vec.tmp)[w], MoreArgs=list(log.int=log.int))
+    a = mapply(sumup.seq, (lib.size-rarefy.depth-vec.y)[w], (lib.size-rarefy.depth-vec.tmp)[w], MoreArgs=list(log.int=log.int))
+    b = mapply(sumup.seq, (lib.size-vec.y)[w], (lib.size-vec.tmp)[w], MoreArgs=list(log.int=log.int))
     phi[w] = exp(a - b)
     phi = matrix(phi, nrow=n.sam)
     phi_1phi = phi*(1-phi)
@@ -4011,6 +4016,7 @@ ldm.stat.allrarefy = function(x, low, up, resid, ss.tot, P.resid, ss.tot.1, phi_
 #'   relative abundances. The default is TRUE.
 #' @param binary a vector of logical values indicating whether to base the calculation of the distance matrices in \code{dist.method} on presence-absence (binary) data. The default is c(FALSE) (analyzing relative abundance data).
 #' @param n.rarefy number of rarefactions. The default is 0 (no rarefaction).
+#' @param verbose a logical value indicating whether to generate verbose output during the permutation process. Default is TRUE.
 #' @return  a list consisting of 
 #' \item{F.statistics}{F statistics for testing each set of covariates}
 #' \item{R.squared}{R-squared statistic for each set of covariates}
@@ -4042,10 +4048,9 @@ ldm.stat.allrarefy = function(x, low, up, resid, ss.tot, P.resid, ss.tot.1, phi_
 #' @references Zhu Z, Satten GA, Caroline M, and Hu YJ (2020). Analyzing matched sets of microbiome data using the LDM and PERMANOVA. Microbiome, 9(133), https://doi.org/10.1186/s40168-021-01034-9.
 #' @references Hu Y, Li Y, Satten GA, and Hu YJ (2022) Testing microbiome associations with censored survival outcomes at both the community and individual taxon levels. bioRxiv, doi.org/10.1101/2022.03.11.483858.
 #' @examples
-#'data(throat.otu.tab5)
-#'data(throat.meta)
 #'res.perm <- permanovaFL(throat.otu.tab5 | (Sex+AntibioticUse) ~ SmokingStatus+PackYears, 
-#'                        data=throat.meta, dist.method="bray", seed=82955, n.perm.max=1000, n.cores=1)
+#'                        data=throat.meta, dist.method="bray", seed=82955, n.perm.max=1000, n.cores=1, 
+#'                        verbose=FALSE)
 
 permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist.method=c("bray"), dist.list=NULL, 
                            cluster.id=NULL, strata=NULL, how=NULL,
@@ -4055,12 +4060,17 @@ permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NUL
                            square.dist=TRUE, center.dist=TRUE, scale.otu.table=c(TRUE), 
                            binary=c(FALSE), n.rarefy=0,
                            test.mediation=FALSE,
-                           n.cores=4) {  
+                           n.cores=4,
+                           verbose=TRUE) {  
     
     #------------------------
     # form.call
     #------------------------
+    
+    old <- options() 
+    on.exit(options(old)) 
     options(na.action=na.omit) # fixed a bug here
+    
     object=formula
     #
     #   extract cluster.id from dataframe
@@ -4614,7 +4624,7 @@ permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NUL
             } # non-parallel computing
             
             n.perm.completed = n.perm.completed + n.perm.block
-            cat("permutations:", n.perm.completed, "\n")
+            if (verbose) message(paste("permutations:", n.perm.completed))
             
             meet.all.rej.stop = all(n.permanova >= n.rej.stop*2)
             if (!is.null(OR)) meet.all.rej.stop = meet.all.rej.stop & all(n.permanova.OR >= n.rej.stop*2)
@@ -4625,7 +4635,7 @@ permanovaFL = function(formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NUL
             
             if (meet.all.rej.stop & med.meet.all.rej.stop) {
                 permanova.stopped = TRUE
-                cat("PERMANOVA stopped at permutation", n.perm.completed, "\n")
+                if (verbose) message(paste("PERMANOVA stopped at permutation", n.perm.completed))
                 break
             }
             
@@ -4984,7 +4994,6 @@ fit.permanova = function( d.gower, index, m, adjust.for.confounders) {
 #' @author Yi-Juan Hu <yijuan.hu@emory.edu>, Glen A. Satten <gsatten@emory.edu>
 #' @export
 #' @examples
-#' data(throat.otu.tab5)
 #' res.jaccard <- jaccard.mean( throat.otu.tab5 )
 
 jaccard.mean = function( otu.table, rarefy.depth=min(rowSums(otu.table)), first.order.approx.only=FALSE) {
@@ -5103,6 +5112,7 @@ jaccard.mean.o1o2 = function( otu.table, rarefy.depth=min(rowSums(otu.table)) ) 
               jac.mean.o2=jac.mean.2, 
               jac.mean.sq.o1=jac.mean.sq.1, 
               jac.mean.sq.o2=jac.mean.sq.2)
+    
     return(res)
     
 } # jaccard.mean.fast
@@ -5173,6 +5183,7 @@ jaccard.mean.o1 = function( otu.table, rarefy.depth=min(rowSums(otu.table)) ) {
 #' @param first.order.approx.only a logical value indicating whether to calculate the expected value 
 #' using the first order approixmation by the delta method. The default is FALSE, 
 #' using the second order approixmation.
+#' @param verbose a logical value indicating whether to generate verbose output. Default is TRUE.
 #' @return a list consisting of 
 #'   \item{unifrac.mean.o1}{Expected unweighted UniFrac distance matrix by the first order approixmation.}
 #'   \item{unifrac.mean.o2}{Expected unweighted UniFrac distance matrix by the second order approixmation.} 
@@ -5188,12 +5199,12 @@ jaccard.mean.o1 = function( otu.table, rarefy.depth=min(rowSums(otu.table)) ) {
 #' data(throat.tree)
 #' res.unifrac <- unifrac.mean( throat.otu.tab5[1:20,], throat.tree)
 
-unifrac.mean = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), first.order.approx.only=FALSE) {
+unifrac.mean = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), first.order.approx.only=FALSE, verbose=TRUE) {
     if (!first.order.approx.only) {
-        out = unifrac.mean.o1o2(otu.table, tree, rarefy.depth)
+        out = unifrac.mean.o1o2(otu.table, tree, rarefy.depth, verbose=verbose)
     }
     else {
-        res = unifrac.mean.o1(otu.table, tree, rarefy.depth)
+        res = unifrac.mean.o1(otu.table, tree, rarefy.depth, verbose=verbose)
         out=list( unifrac.mean.o1=res$unifrac.mean.1, 
                   unifrac.mean.o2=NA, 
                   unifrac.mean.sq.o1=res$unifrac.mean.1^2, 
@@ -5202,11 +5213,9 @@ unifrac.mean = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), 
     return(out)
 }
 
-`%notin%` <- Negate(`%in%`)
-
 
 #(old) unifrac.ave.sq.fast
-unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=TRUE, keep.root=TRUE) {
+unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=TRUE, keep.root=TRUE, verbose=TRUE) {
     
     otu.table=as.matrix(otu.table)
     n.obs=dim(otu.table)[1]
@@ -5223,15 +5232,13 @@ unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.tabl
     if (trim==TRUE) {
         keep=which(colSums( otu.table )>0)
         if (sum(keep)<n.taxa) {
-            print('number of empty taxa dropped from OTU table:')
-            print( n.taxa-sum(keep) )
+            if (verbose) message(paste("number of empty taxa dropped from OTU table:", n.taxa-sum(keep)))
             otu.table=otu.table[,keep]
             n.taxa=dim(otu.table)[2]
             otu.names=colnames(otu.table)
         }
         if (length(tree.names)<length(otu.names)) {
-            print('error: there are more taxa in OTU table than tree')
-            return
+            stop('error: there are more taxa in OTU table than tree')
         }
         else if (length(tree.names)>length(otu.names)) {
             drop.names=setdiff( tree.names, otu.names )
@@ -5240,13 +5247,11 @@ unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.tabl
             #			tree=drop.tip(tree,drop.list,collapse.singles=!keep.root)
             tree.names=tree$tip.label
             otu.table=otu.table[,tree.names]
-            print('number of tips dropped from tree:')
-            print( length(drop.list) )
+            if (verbose) message(paste("number of tips dropped from tree:", length(drop.list)))
         }
     }	
     if( !all(sort(tree.names)==sort(otu.names)) ) {
-        print('taxa names in tree and OTU table to not agree')
-        return
+        stop('taxa names in tree and OTU table to not agree')
     }
     otu.table=otu.table[,tree.names]
     #
@@ -5400,10 +5405,11 @@ unifrac.mean.o1o2 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.tabl
 } #unifrac.mean.o1o2
 
 # (old) unifrac.ave.1
-unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=TRUE, keep.root=TRUE) {
+unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=TRUE, keep.root=TRUE, verbose=TRUE) {
     #
     #	calculates only the zeroth order (first) term for the unifrac distance
     #
+    `%notin%` <- Negate(`%in%`)
     
     otu.table=as.matrix(otu.table)
     n.obs=dim(otu.table)[1]
@@ -5414,7 +5420,7 @@ unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)
         #		
         keep.list=which( colSums(otu.table)>0 )
         otu.table=otu.table[,keep.list]
-        print( c('note: empty taxa removed, number of taxa changed from',n.taxa,'to',length(keep.list) ) )
+        if (verbose) message(paste("Empty taxa removed, number of taxa changed from", n.taxa, "to", length(keep.list)))
         n.taxa=dim(otu.table)[2]
     }
     #	
@@ -5432,7 +5438,7 @@ unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)
         drop.list=which( tree.names %notin% otu.names )
         tree=castor::get_subtree_with_tips(tree,omit_tips=drop.list, force_keep_root=keep.root)$subtree
         tree.names=tree$tip.label
-        print( c('note: number of nodes in tree reduced from', n.tree.names, 'to', length(tree.names) ), quote=FALSE)
+        if (verbose) message(paste("Number of nodes in tree reduced from", n.tree.names, "to", length(tree.names)))
     }
     if( !all(sort(tree.names)==sort(otu.names)) ) {
         #
@@ -5441,7 +5447,7 @@ unifrac.mean.o1 = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)
         keep.list=which( otu.names %in% tree.names )
         otu.table=otu.table[,keep.list]
         n.taxa=dim(otu.table)[2]
-        print( c('note: number of taxa in OTU table reduced from', n.otu.names, 'to', n.taxa), quote=FALSE )
+        if (verbose) message(paste("Number of taxa in OTU table reduced from", n.otu.names, "to", n.taxa))
     }
     otu.table=otu.table[,tree.names]
     #
@@ -5631,7 +5637,9 @@ jaccard.mean.fast.small = function( otu.table, rarefy.depth=min(rowSums(otu.tabl
     
 } #jaccard.mean.fast.small
 
-unifrac.ave.sq.fast.small = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=FALSE, keep.root=TRUE, n.batch=1) {
+unifrac.ave.sq.fast.small = function( otu.table, tree, rarefy.depth=min(rowSums(otu.table)), trim=FALSE, keep.root=TRUE, n.batch=1, verbose=TRUE) {
+    
+    `%notin%` <- Negate(`%in%`)
     
     otu.table=as.matrix(otu.table)
     n.obs=dim(otu.table)[1]
@@ -5642,7 +5650,7 @@ unifrac.ave.sq.fast.small = function( otu.table, tree, rarefy.depth=min(rowSums(
         #		
         keep.list=which( colSums(otu.table)>0 )
         otu.table=otu.table[,keep.list]
-        print( c('note: empty taxa removed, number of taxa changed from',n.taxa,'to',length(keep.list) ) )
+        if (verbose) message(paste("Empty taxa removed, number of taxa changed from", n.taxa, "to", length(keep.list)))
         n.taxa=dim(otu.table)[2]
     }
     #	
@@ -5660,7 +5668,7 @@ unifrac.ave.sq.fast.small = function( otu.table, tree, rarefy.depth=min(rowSums(
         drop.list=which( tree.names %notin% otu.names )
         tree=castor::get_subtree_with_tips(tree,omit_tips=drop.list, force_keep_root=keep.root)$subtree
         tree.names=tree$tip.label
-        print( c('note: number of nodes in tree reduced from', n.tree.names, 'to', length(tree.names) ), quote=FALSE)
+        if (verbose) message(paste("Number of nodes in tree reduced from", n.tree.names, "to", length(tree.names)))
     }
     if( !all(sort(tree.names)==sort(otu.names)) ) {
         #
@@ -5669,7 +5677,7 @@ unifrac.ave.sq.fast.small = function( otu.table, tree, rarefy.depth=min(rowSums(
         keep.list=which( otu.names %in% tree.names )
         otu.table=otu.table[,keep.list]
         n.taxa=dim(otu.table)[2]
-        print( c('note: number of taxa in OTU table reduced from', n.otu.names, 'to', n.taxa), quote=FALSE )
+        if (verbose) message(paste("Number of taxa in OTU table reduced from", n.otu.names, "to", n.taxa))
     }
     otu.table=otu.table[,tree.names]
     #
@@ -5902,10 +5910,6 @@ medTest.SBMH <- function(pEM,pMY,MCP.type="FDR",t1=0.05,t2=0.05,lambda=0){
 proc.intersection.adaptiveFDR = function(pv1,pv2, t1=0.025, t2=0.025,lambda=0.0){
     #if adaptive=TRUE, estimates the fraction of zeros of study i in selection j, for (i,j) = (1,2) or (2,1)
     #incorporate it into procedure by multiplying the p-value of study i by this fraction.   
-    #print(c(t1,t2))
-    #print(summary(pv1))
-    #print(summary(pv2))
-    #print(lambda)
     if (lambda>0){
         t1 = min(t1,lambda)
         t2= min(t2,lambda)
