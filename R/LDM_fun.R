@@ -2393,8 +2393,8 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                             # combination test
                             p.global.freq.tmp <- 0.5*n.global.freq
                             p.global.freq.tmp.OR <- 0.5*n.global.freq.OR
-                            p.global.freq.null <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
-                            p.global.freq.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
+                            p.global.freq.null <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
+                            p.global.freq.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
                             
                             pmin.global.freq.com <- pmin(p.global.freq.tmp, p.global.freq.tmp.OR)
                             pmin.global.freq.null.com <- pmin(p.global.freq.null, p.global.freq.null.OR)
@@ -2412,8 +2412,8 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                                 # combination test
                                 p.global.tran.tmp <- 0.5*n.global.tran
                                 p.global.tran.tmp.OR <- 0.5*n.global.tran.OR
-                                p.global.tran.null <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
-                                p.global.tran.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
+                                p.global.tran.null <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
+                                p.global.tran.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
                                 
                                 pmin.global.tran.com <- pmin(p.global.tran.tmp, p.global.tran.tmp.OR)
                                 pmin.global.tran.null.com <- pmin(p.global.tran.null, p.global.tran.null.OR)
@@ -2450,10 +2450,10 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                         pmin.global.omni <- pmin(p.global.freq.tmp, p.global.tran.tmp)
                         
                         if (is.null(p.global.freq.null)) {
-                            p.global.freq.null <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
+                            p.global.freq.null <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
                         }
                         if (is.null(p.global.tran.null)) {
-                            p.global.tran.null <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
+                            p.global.tran.null <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
                         }
                         
                         pmin.global.omni.null <- pmin(p.global.freq.null, p.global.tran.null)
@@ -2469,10 +2469,10 @@ ldm = function( formula, other.surv.resid=NULL, data=.GlobalEnv, tree=NULL, dist
                             pmin.global.omni.OR <- pmin(p.global.freq.tmp.OR, p.global.tran.tmp.OR)
                             
                             if (is.null(p.global.freq.null.OR)) {
-                                p.global.freq.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
+                                p.global.freq.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.freq.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
                             }
                             if (is.null(p.global.tran.null.OR)) {
-                                p.global.tran.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.global.perm.max)), dim = c(n.var1, n.rarefy, n.global.perm.max)) 
+                                p.global.tran.null.OR <- n.perm.completed + 0.5 - array(rowRanks(global.tran.perm.OR[,,1:n.perm.completed,drop=FALSE], ties.method = "average", dim.=c(n.var1*n.rarefy, n.perm.completed)), dim = c(n.var1, n.rarefy, n.perm.completed)) 
                             }
                             
                             pmin.global.omni.null.OR <- pmin(p.global.freq.null.OR, p.global.tran.null.OR)
