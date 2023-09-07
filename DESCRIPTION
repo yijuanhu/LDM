@@ -1,9 +1,10 @@
 Package: LDM
+Type: Package
 Title: Testing Hypotheses About the Microbiome using the Linear Decomposition Model
-Version: 6.0
-Date: 2023-08-23
-Author: Yi-Juan Hu and Glen A. Satten
-Maintainer: Yi-Juan Hu <yijuan.hu@emory.edu>
+Version: 6.0.1
+Date: 2023-09-07
+Authors@R: c(
+    person("Yi-Juan", "Hu", role = c("aut", "cre"), email = "yijuan.hu@emory.edu"),    person("Glen A", "Satten", role = "aut"))
 Description: A single analysis path that includes distance-based ordination, global tests of any effect of the microbiome, and tests of the effects of individual taxa with false-discovery-rate (FDR) control. It accommodates both continuous and discrete covariates as well as interaction terms to be tested either singly or in combination, allows for adjustment of confounding covariates, and uses permutation-based p-values that can control for sample correlations. It can be applied to transformed data, and an omnibus test can combine results from analyses conducted on different transformation scales. It can also be used for testing presence-absence associations based on infinite number of rarefaction replicates, testing mediation effects of the microbiome, analyzing censored time-to-event outcomes, and for compositional analysis by fitting linear models to centered-log-ratio taxa count data. 
 License: GPL (>=2)
 RoxygenNote: 7.2.3
@@ -23,4 +24,7 @@ Suggests:
     testthat,
     survival
 VignetteBuilder: R.rsp
+URL: https://github.com/yijuanhu/LDM
+BugReports: https://github.com/yijuanhu/LDM/issues
 Encoding: UTF-8
+LazyData: true
